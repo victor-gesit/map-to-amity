@@ -19,7 +19,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="wan-nv-JYG" customClass="GMSMapView">
-                                <rect key="frame" x="0.0" y="70" width="375" height="597"/>
+                                <rect key="frame" x="0.0" y="70" width="375" height="497"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             </view>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="DfF-FF-XY9">
@@ -29,6 +29,15 @@
                                     <action selector="simulateMovement:" destination="BYZ-38-t0r" eventType="touchUpInside" id="0X2-dZ-ISa"/>
                                 </connections>
                             </button>
+                            <textView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" editable="NO" textAlignment="center" adjustsFontForContentSizeCategory="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aJ9-ex-smc">
+                                <rect key="frame" x="0.0" y="597" width="375" height="70"/>
+                                <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="70" id="NJr-HO-Jz3"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="17"/>
+                                <textInputTraits key="textInputTraits" autocapitalizationType="sentences"/>
+                            </textView>
                         </subviews>
                         <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
@@ -37,12 +46,16 @@
                             <constraint firstItem="wan-nv-JYG" firstAttribute="top" secondItem="DfF-FF-XY9" secondAttribute="bottom" id="LEp-yr-mUV"/>
                             <constraint firstItem="DfF-FF-XY9" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="20" id="QVU-tJ-pJ3"/>
                             <constraint firstItem="DfF-FF-XY9" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="ddF-wj-YOg"/>
+                            <constraint firstItem="aJ9-ex-smc" firstAttribute="bottom" secondItem="6Tk-OE-BBY" secondAttribute="bottom" id="gkJ-uu-GBa"/>
+                            <constraint firstItem="aJ9-ex-smc" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" id="hiS-8x-rO6"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="wan-nv-JYG" secondAttribute="trailing" id="jv0-Cy-j76"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="wan-nv-JYG" secondAttribute="bottom" id="q2m-Bq-8LY"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="aJ9-ex-smc" secondAttribute="trailing" id="pnb-50-u9T"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="wan-nv-JYG" secondAttribute="bottom" constant="100" id="q2m-Bq-8LY"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                     <connections>
+                        <outlet property="infoLabel" destination="aJ9-ex-smc" id="K84-gn-uPI"/>
                         <outlet property="mapView" destination="wan-nv-JYG" id="gvr-P0-ge1"/>
                     </connections>
                 </viewController>

@@ -6,9 +6,7 @@
 //  Copyright © 2018 Victor Idongesit. All rights reserved.
 //
 
-//
-// Import libraries
-//
+
 import UIKit
 import PusherSwift
 import Alamofire
@@ -16,65 +14,107 @@ import GoogleMaps
 import MapKit
 
 
-class CustomPin: NSObject, MKAnnotation {
-    var coordinate: CLLocationCoordinate2D
-    var title: String?
-    var subtitle: String?
-    
-    init(pinTitle: String, pinSubTitle: String, location: CLLocationCoordinate2D) {
-        self.coordinate = location
-        self.title = pinTitle
-        self.subtitle = pinSubTitle
-    }
-}
-
-
-//
-// View controller class
-//
-class ViewController: UIViewController, GMSMapViewDelegate, MKMapViewDelegate {
-    // Marker on the map
-    var locationMarker: GMSMarker!
-    
-    // Default starting coordinates
-    var longitude = -122.088426
-    var latitude  = 37.388064
-    
+class ViewController: UIViewController, GMSMapViewDelegate, MKMapViewDelegate, CLLocationManagerDelegate {
+ 
+    var carMarker: GMSMarker!
+    let locationManager = CLLocationManager()
     var pusher: Pusher!
+    
+    var currentDirection: CLLocationDirection = CLLocationDirection(exactly: 0.0)!
+    var currentLocation: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude: 0, longitude: 0)
+    var carDirection: Double = 0
+    
+    @IBOutlet weak var infoLabel: UITextView!
     @IBOutlet weak var mapView: GMSMapView!
-
+    let destinationLocation = CLLocationCoordinate2D(latitude: 6.569884, longitude: 3.373243 ) // Amity
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-        let sourceLocation = CLLocationCoordinate2D(latitude: 6.569884, longitude: 3.373243 )
-        let destinationLocation = CLLocationCoordinate2D(latitude: 6.553705, longitude: 3.366297 )
+        locationManager.activityType = .automotiveNavigation
+        locationManager.distanceFilter = kCLDistanceFilterNone
+        self.locationManager.requestAlwaysAuthorization()
         
-        let sourcePin = CustomPin(pinTitle: "Home", pinSubTitle: "Amity 2.0", location: sourceLocation)
-        let destinationPin = CustomPin(pinTitle: "Epic Tower", pinSubTitle: "AWD Building", location: destinationLocation)
-        
-        let camera = GMSCameraPosition.camera(withLatitude:latitude, longitude:longitude, zoom:15.0)
-        mapView.camera = GMSCameraPosition(target: sourceLocation, zoom: 120, bearing: 90, viewingAngle: 90)
-        let sourcePlaceMark = GMSMarker(position: sourceLocation)
-        sourcePlaceMark.title = "Home"
-        sourcePlaceMark.map = mapView
-        let destinationPlaceMark = GMSMarker(position: destinationLocation)
-        destinationPlaceMark.title = "Epic Tower"
-        destinationPlaceMark.map = mapView
-
+        if (CLLocationManager.locationServicesEnabled())
+        {
+            print("Enabled location services")
+            locationManager.delegate = self
+            locationManager.desiredAccuracy = kCLLocationAccuracyBestForNavigation
+            locationManager.requestAlwaysAuthorization()
+            if let currentLocation = locationManager.location?.coordinate {
+                carMarker = GMSMarker(position: currentLocation)
+                carMarker.icon = UIImage(named: "resizedGat")
+                carMarker.title = "Here"
+                carMarker.map = mapView
+                carMarker.groundAnchor = CGPoint(x: 0.5, y: 0.5)
+                mapView.animate(toZoom: 20)
+                dropPin(at: currentLocation, on: mapView, withTitle: "Here")
+            }
+            dropPin(at: destinationLocation, on: mapView, withTitle: "Amity")
+            locationManager.startUpdatingLocation()
+            locationManager.startUpdatingHeading()
+        } else {
+            print("Location services not enabled")
+        }
         
         self.mapView.delegate = self
-    
-        NetworkCalls.shared.drawRoute(from: sourceLocation, to: destinationLocation, on: mapView)
     }
     
-    //
-    // Send a request to the API to simulate GPS coords
-    //
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        let location = locations.last! as CLLocation
+        
+        let center = location.coordinate
+        NetworkCalls.shared.drawRoute(from: center, to: destinationLocation, on: mapView, completion: { vehicleLocation, navInstruction, direction in
+            self.infoLabel.text = navInstruction?.htmlToString
+            if let carLocation = vehicleLocation {
+                self.updateMarker(coordinates: carLocation, degrees: direction, duration: 0.5, marker: self.carMarker)
+                self.carDirection = direction
+                self.mapView.animate(toBearing: direction)
+                self.mapView.animate(toLocation: carLocation)
+            } else {
+                print("Executing the else statement")
+                self.updateMarker(coordinates: center, degrees: direction, duration: 0.5, marker: self.carMarker)
+                self.mapView.animate(toLocation: center)
+            }
+            self.dropPin(at: self.destinationLocation, on: self.mapView, withTitle: "Amity")
+        })
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
+        mapView.animate(toBearing: carDirection)
+    }
+
+    public func dropPin(at point: CLLocationCoordinate2D, on mapView: GMSMapView, withTitle title: String, image: UIImage? = nil, rotate: Double = 0) {
+        let pin = GMSMarker(position: point)
+        
+        pin.title = title
+        
+        if let markerIcon = image {
+            pin.icon = markerIcon
+        }
+        pin.map = mapView
+    }
+    
+    func updateMarker(coordinates: CLLocationCoordinate2D, degrees: CLLocationDegrees, duration: Double, marker: GMSMarker) {
+        // Keep Rotation Short
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(0.5)
+        // marker.rotation = degrees
+        CATransaction.commit()
+        
+        // Movement
+        CATransaction.begin()
+        CATransaction.setAnimationDuration(duration)
+        marker.position = coordinates
+        
+        // Center Map View
+        let camera = GMSCameraUpdate.setTarget(coordinates)
+        mapView.animate(with: camera)
+        
+        CATransaction.commit()
+    }
+    
     @IBAction func simulateMovement(_ sender: Any) {
     }
-    
-    //
-    // Connect to pusher and listen for events
-    //
-    private func listenForCoordUpdates() {
-    }
 }
+
+
